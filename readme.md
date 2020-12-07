@@ -7,6 +7,7 @@
 - sparkfun: [EX8029 stereo camera](https://www.sparkfun.com/products/14726)
 - adafruit: [LSM6DSOX + LIS3MDL 9DOF IMU](https://www.adafruit.com/product/4517)
 - adafruit: [LPS22 pressure sensor](https://www.adafruit.com/product/4633)
+- https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390l-ds001.pdf
 
 ## Interesting SW
 
