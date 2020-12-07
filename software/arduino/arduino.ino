@@ -4,12 +4,14 @@
 // accel/gyro: https://adafruit.github.io/Adafruit_LSM6DS/html/class_adafruit___l_s_m6_d_s.html
 // mag: https://adafruit.github.io/Adafruit_LIS3MDL/html/class_adafruit___l_i_s3_m_d_l.html
 // pressure: https://adafruit.github.io/Adafruit_LPS2X/html/_adafruit___l_p_s2_x_8h.html
+// conversions: https://github.com/adafruit/Adafruit_Sensor/blob/master/Adafruit_Sensor.h
 // -----------------------------------------------------------
 #include <Wire.h>
 #include "filter.h"
 #include "soxsetup.h"
+#include <Adafruit_Sensor.h> // SENSORS_PRESSURE_SEALEVELHPA, SENSORS_GRAVITY_STANDARD
 
-#define SEALEVELPRESSURE_HPA (1013.25)
+// #define SEALEVELPRESSURE_HPA (1013.25)
 
 Adafruit_LIS3MDL lis3mdl; // magnetometer
 Adafruit_BMP3XX bmp;
@@ -24,10 +26,13 @@ float m[11];
 byte const* p = reinterpret_cast<byte const *>(m);
 sensors_event_t a;
 sensors_event_t g;
-sensors_event_t temp, tmp;
+sensors_event_t tmp;
 sensors_event_t mag;
 //sensors_event_t pres;
-
+float ax, ay, az;
+float mx, my, mz;
+float wx, wy, wz;
+float pres, temp, alt;
 float roll, pitch, yaw;
 
 /*
@@ -66,14 +71,28 @@ void loop() {
       if (0) {
         if (!bmp.performReading()) Serial.println("ERROR: BMP");
       }
+      ax = a.acceleration.x / SENSORS_GRAVITY_STANDARD;
+      ay = a.acceleration.y / SENSORS_GRAVITY_STANDARD;
+      az = a.acceleration.z / SENSORS_GRAVITY_STANDARD;
+      
+      wx = g.gyro.x;
+      wy = g.gyro.y;
+      wz = g.gyro.z;
+      
+      mx = mag.magnetic.x;
+      my = mag.magnetic.y;
+      mx = mag.magnetic.z;
+      
+      pres = bmp.pressure;
+      // temp = tmp.temperature; // C - faster? 
+      // temp = bmp.temperature; // C
+      temp = bmp.temperature*9.0/5.0+32.0; // F
+      alt = bmp.readAltitude(SENSORS_PRESSURE_SEALEVELHPA); // m
 
       if(1) { // debug
             // Yaw, Pitch, Roll
             if (0) {
-                compass.update(
-                a.acceleration.x, a.acceleration.y, a.acceleration.z,
-                mag.magnetic.x,  mag.magnetic.y, mag.magnetic.z);
-                
+                compass.update(ax, ay, az, mx,  my, mz);
                 compass.getEuler(roll, pitch, yaw);
                 
                 Serial.print("Orientation: ");
@@ -86,56 +105,57 @@ void loop() {
             }
 
             if (1){
-                Serial.print(a.acceleration.x, 3);
+                Serial.print(ax, 3);
                 Serial.print(", ");
-                Serial.print(a.acceleration.y, 3);
+                Serial.print(ay, 3);
                 Serial.print(", ");
-                Serial.print(a.acceleration.z, 3);
+                Serial.print(az, 3);
                 Serial.println(" m/s/s");
             }
 
             if (1) {
-                Serial.print(g.gyro.x, 3);
+                Serial.print(wx, 3);
                 Serial.print(", ");
-                Serial.print(g.gyro.y, 3);
+                Serial.print(wy, 3);
                 Serial.print(", ");
-                Serial.print(g.gyro.z, 3);
+                Serial.print(wz, 3);
                 Serial.println(" rad/s");
             }
 
             if (1) {
-                Serial.print(mag.magnetic.x, 3);
+                Serial.print(mx, 3);
                 Serial.print(", ");
-                Serial.print(mag.magnetic.y, 3);
+                Serial.print(my, 3);
                 Serial.print(", ");
-                Serial.print(mag.magnetic.z, 3);
+                Serial.print(mz, 3);
                 Serial.println(" uT");
             }
 
             if (1) {
-                Serial.print(bmp.pressure,2);
-                Serial.print("Pa, ");
-                Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA),3);
-                Serial.print("m, ");
-                Serial.print(bmp.temperature*9.0/5.0+32.0,2);
-                Serial.println("F");
+                Serial.print(pres/100.0,2);
+                Serial.print(" hPa, ");
+                Serial.print(alt,3);
+                Serial.print(" m, ");
+                Serial.print(temp,2);
+                Serial.println(" F");
             }
       }
       else {
-          m[0] = a.acceleration.x; // m/sec^2
-          m[1] = a.acceleration.y;
-          m[2] = a.acceleration.z;
+          m[0] = ax; // m/sec^2
+          m[1] = ay;
+          m[2] = az;
     
-          m[3] = g.gyro.x; // rads/sec
-          m[4] = g.gyro.y;
-          m[5] = g.gyro.z;
+          m[3] = wx; // rads/sec
+          m[4] = wy;
+          m[5] = wz;
     
-          m[6] = mag.magnetic.x;  // uT
-          m[7] = mag.magnetic.y;
-          m[8] = mag.magnetic.z;
+          m[6] = mx;  // uT
+          m[7] = my;
+          m[8] = mz;
 
-          m[9] = bmp.pressure; // Pa
-          m[10] = bmp.temperature; // C
+          m[9] = pres;  // Pa
+          m[10] = temp; // C
+          m[11] = alt;  // m
     
           Serial.write(0xff);
           Serial.write(p, sizeof(m));
