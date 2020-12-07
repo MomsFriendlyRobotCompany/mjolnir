@@ -9,22 +9,24 @@
 #include "filter.h"
 #include "soxsetup.h"
 
+#define SEALEVELPRESSURE_HPA (1013.25)
 
 Adafruit_LIS3MDL lis3mdl; // magnetometer
-Adafruit_LPS22 lps;       // pressure/temperature
+Adafruit_BMP3XX bmp;
 Adafruit_LSM6DSOX sox;    // accels/gyros
 
 //Madgwick mad(1.0);
 eCompass compass;
 
 
-unsigned int cnt=0;
+//unsigned int cnt=0;
 float m[11];
+byte const* p = reinterpret_cast<byte const *>(m);
 sensors_event_t a;
 sensors_event_t g;
 sensors_event_t temp, tmp;
 sensors_event_t mag;
-sensors_event_t pres;
+//sensors_event_t pres;
 
 float roll, pitch, yaw;
 
@@ -49,37 +51,75 @@ void setup(void) {
 }
 
 void loop() {
-//  byte *p = (byte*)m;
-  byte const* p = reinterpret_cast<byte const *>(m);
+    bool freeRun = true;
+    int b = 0;
+    
+    if (Serial.available() > 0) {
+        int b = Serial.read();
+    }
 
-  if (Serial.available() > 0) {
-    // read the incoming byte:
-    char b = Serial.read();
-
-    if (b == 'g'){
-//    if (1){
+    if (b == 'g' || freeRun){
         // not sure this helps, Adafruit_LSM6DS::_read() always gets
         // accel/gyros ... does it block?
       sox.getEvent(&a,&g,&tmp);
-      if (cnt%5 == 0) lis3mdl.getEvent(&mag);
-      if (cnt%20 == 0) lps.getEvent(&pres, &temp); // get pressure/temp
+      if (0) lis3mdl.getEvent(&mag);
+      if (0) {
+        if (!bmp.performReading()) Serial.println("ERROR: BMP");
+      }
 
+      if(1) { // debug
+            // Yaw, Pitch, Roll
+            if (0) {
+                compass.update(
+                a.acceleration.x, a.acceleration.y, a.acceleration.z,
+                mag.magnetic.x,  mag.magnetic.y, mag.magnetic.z);
+                
+                compass.getEuler(roll, pitch, yaw);
+                
+                Serial.print("Orientation: ");
+                Serial.print(yaw, 2);
+                Serial.print(", ");
+                Serial.print(pitch, 2);
+                Serial.print(", ");
+                Serial.print(roll, 2);
+                Serial.println(" deg");
+            }
 
-      if(0) { // debug
-        
-        compass.update(
-            a.acceleration.x, a.acceleration.y, a.acceleration.z,
-            mag.magnetic.x,  mag.magnetic.y, mag.magnetic.z);
+            if (1){
+                Serial.print(a.acceleration.x, 3);
+                Serial.print(", ");
+                Serial.print(a.acceleration.y, 3);
+                Serial.print(", ");
+                Serial.print(a.acceleration.z, 3);
+                Serial.println(" m/s/s");
+            }
 
-        compass.getEuler(roll, pitch, yaw);
-      
-        // Yaw, Pitch, Roll
-//        Serial.print("Orientation: ");
-        Serial.print(yaw, 2);
-        Serial.print(", ");
-        Serial.print(pitch, 2);
-        Serial.print(", ");
-        Serial.println(roll, 2);
+            if (1) {
+                Serial.print(g.gyro.x, 3);
+                Serial.print(", ");
+                Serial.print(g.gyro.y, 3);
+                Serial.print(", ");
+                Serial.print(g.gyro.z, 3);
+                Serial.println(" rad/s");
+            }
+
+            if (1) {
+                Serial.print(mag.magnetic.x, 3);
+                Serial.print(", ");
+                Serial.print(mag.magnetic.y, 3);
+                Serial.print(", ");
+                Serial.print(mag.magnetic.z, 3);
+                Serial.println(" uT");
+            }
+
+            if (1) {
+                Serial.print(bmp.pressure,2);
+                Serial.print("Pa, ");
+                Serial.print(bmp.readAltitude(SEALEVELPRESSURE_HPA),3);
+                Serial.print("m, ");
+                Serial.print(bmp.temperature*9.0/5.0+32.0,2);
+                Serial.println("F");
+            }
       }
       else {
           m[0] = a.acceleration.x; // m/sec^2
@@ -93,10 +133,9 @@ void loop() {
           m[6] = mag.magnetic.x;  // uT
           m[7] = mag.magnetic.y;
           m[8] = mag.magnetic.z;
-    
-          m[9] = pres.pressure; // hPa
-    
-          m[10] = temp.temperature; // C
+
+          m[9] = bmp.pressure; // Pa
+          m[10] = bmp.temperature; // C
     
           Serial.write(0xff);
           Serial.write(p, sizeof(m));
@@ -106,9 +145,10 @@ void loop() {
         Serial.println("*");
     }
 
-  cnt += 1;
-  if (cnt == 65000) cnt = 0;  // value?
-  }
+//  cnt += 1;
+//  if (cnt == 65000) cnt = 0;  // value?
+//  }
+//  delay(100);
 
-  delay(2); // 5ms => 200Hz | 4ms => 250Hz
+//  delay(2); // 5ms => 200Hz | 4ms => 250Hz
 }

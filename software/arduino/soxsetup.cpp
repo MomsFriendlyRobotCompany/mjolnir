@@ -1,7 +1,8 @@
 #include "soxsetup.h"
 
 extern Adafruit_LIS3MDL lis3mdl; // magnetometer
-extern Adafruit_LPS22 lps;       // pressure/temperature
+//extern Adafruit_LPS22 lps;       // pressure/temperature
+extern Adafruit_BMP3XX bmp;
 extern Adafruit_LSM6DSOX sox;    // accels/gyros
 
 const lsm6ds_data_rate_t accel_data_rate = LSM6DS_RATE_104_HZ;
@@ -9,25 +10,10 @@ const lsm6ds_accel_range_t accel_range   = LSM6DS_ACCEL_RANGE_2_G;
 const lsm6ds_data_rate_t gyro_data_rate  = LSM6DS_RATE_208_HZ;
 const lsm6ds_gyro_range_t gyro_range     = LSM6DS_GYRO_RANGE_2000_DPS;
 const lis3mdl_dataRate_t mag_data_rate   = LIS3MDL_DATARATE_40_HZ;
-const lps22_rate_t pressure_data_rate    = LPS22_RATE_10_HZ;
+//const lps22_rate_t pressure_data_rate    = LPS22_RATE_10_HZ;
 
-void sox_setup(){
-    
-  Serial.println("Adafruit LSM6DSOX test!");
 
-  Wire.setClock(400000); // not sure this works?
-
-  if (!sox.begin_I2C()) {
-    while (1) {
-      delay(1000);
-      Serial.println("LSM6DSOX NOT Found!");
-    }
-  }
-  Serial.println("LSM6DSOX Found!");
-
-    // Accelerometer ------------------------------------------
-
-   sox.setAccelRange(accel_range);
+void printIMU(){ 
   Serial.print("Accelerometer range set to: ");
     switch (sox.getAccelRange()) {
   case LSM6DS_ACCEL_RANGE_2_G:
@@ -44,7 +30,6 @@ void sox_setup(){
     break;
   }
 
-    sox.setAccelDataRate(accel_data_rate);
   Serial.print("Accelerometer data rate set to: ");
   switch (sox.getAccelDataRate()) {
   case LSM6DS_RATE_SHUTDOWN:
@@ -82,9 +67,6 @@ void sox_setup(){
     break;
   }
 
-
-  // Gyros ----------------------------------------------------
-   sox.setGyroRange(gyro_range);
   Serial.print("Gyro range set to: ");
   switch (sox.getGyroRange()) {
   case LSM6DS_GYRO_RANGE_125_DPS:
@@ -106,7 +88,6 @@ void sox_setup(){
     break; // unsupported range for the DSOX
   }
 
-   sox.setGyroDataRate(gyro_data_rate);
   Serial.print("Gyro data rate set to: ");
   switch (sox.getGyroDataRate()) {
   case LSM6DS_RATE_SHUTDOWN:
@@ -144,17 +125,6 @@ void sox_setup(){
     break;
   }
 
-    // Magnetometer -----------------------------------------------------
-
-  if (! lis3mdl.begin_I2C()) {
-    while (1) { 
-        delay(1000);
-        Serial.println("LIS3MDL NOT Found!");
-    }
-  }
-  Serial.println("LIS3MDL Found!");
-
-  lis3mdl.setPerformanceMode(LIS3MDL_MEDIUMMODE);
   Serial.print("Performance mode set to: ");
   switch (lis3mdl.getPerformanceMode()) {
     case LIS3MDL_LOWPOWERMODE: Serial.println("Low"); break;
@@ -163,7 +133,6 @@ void sox_setup(){
     case LIS3MDL_ULTRAHIGHMODE: Serial.println("Ultra-High"); break;
   }
 
-  lis3mdl.setOperationMode(LIS3MDL_CONTINUOUSMODE);
   Serial.print("Operation mode set to: ");
   // Single shot mode will complete conversion and go into power down
   switch (lis3mdl.getOperationMode()) {
@@ -172,8 +141,6 @@ void sox_setup(){
     case LIS3MDL_POWERDOWNMODE: Serial.println("Power-down"); break;
   }
 
-  lis3mdl.setDataRate(mag_data_rate);
-  // You can check the datarate by looking at the frequency of the DRDY pin
   Serial.print("Data rate set to: ");
   switch (lis3mdl.getDataRate()) {
     case LIS3MDL_DATARATE_0_625_HZ: Serial.println("0.625 Hz"); break;
@@ -190,7 +157,6 @@ void sox_setup(){
     case LIS3MDL_DATARATE_1000_HZ: Serial.println("1000 Hz"); break;
   }
 
-  lis3mdl.setRange(LIS3MDL_RANGE_4_GAUSS);
   Serial.print("Range set to: ");
   switch (lis3mdl.getRange()) {
     case LIS3MDL_RANGE_4_GAUSS: Serial.println("+-4 gauss"); break;
@@ -198,7 +164,37 @@ void sox_setup(){
     case LIS3MDL_RANGE_12_GAUSS: Serial.println("+-12 gauss"); break;
     case LIS3MDL_RANGE_16_GAUSS: Serial.println("+-16 gauss"); break;
   }
+}
 
+void sox_setup(){
+    
+  Wire.setClock(400000); // not sure this works?
+
+  if (!sox.begin_I2C()) {
+    while (1) {
+      delay(1000);
+      Serial.println("LSM6DSOX NOT Found!");
+    }
+  }
+    // Accelerometer ------------------------------------------
+    sox.setAccelRange(accel_range);
+    sox.setAccelDataRate(accel_data_rate);
+
+    // Gyros ----------------------------------------------------
+    sox.setGyroRange(gyro_range);
+    sox.setGyroDataRate(gyro_data_rate);
+
+    // Magnetometer -----------------------------------------------------
+  if (!lis3mdl.begin_I2C()) {
+    while (1) { 
+        delay(1000);
+        Serial.println("LIS3MDL NOT Found!");
+    }
+  }
+  lis3mdl.setPerformanceMode(LIS3MDL_MEDIUMMODE);
+  lis3mdl.setOperationMode(LIS3MDL_CONTINUOUSMODE);
+  lis3mdl.setDataRate(mag_data_rate);
+  lis3mdl.setRange(LIS3MDL_RANGE_4_GAUSS);
   lis3mdl.setIntThreshold(500);
   lis3mdl.configInterrupt(false, false, true, // enable z axis
                           true, // polarity
@@ -206,24 +202,16 @@ void sox_setup(){
                           true); // enabled!
 
   // Pressure/Temperature -----------------------------------------------
-  if (!lps.begin_I2C()) {
-    Serial.println("Failed to find LPS22 chip");
-    while (1) { 
+  if (!bmp.begin_I2C()) {
+    while (1){
+        Serial.println("BMP3 NOT Found!");
         delay(1000);
-        Serial.println("LPS22 NOT Found!");
     }
   }
-  Serial.println("LPS22 Found!");
+  bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X); // sampling 90Hz 
+  bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+  bmp.setOutputDataRate(BMP3_ODR_200_HZ);
 
-  lps.setDataRate(pressure_data_rate);
-  Serial.print("Data rate set to: ");
-  switch (lps.getDataRate()) {
-    case LPS22_RATE_ONE_SHOT: Serial.println("One Shot"); break;
-    case LPS22_RATE_1_HZ: Serial.println("1 Hz"); break;
-    case LPS22_RATE_10_HZ: Serial.println("10 Hz"); break;
-    case LPS22_RATE_25_HZ: Serial.println("25 Hz"); break;
-    case LPS22_RATE_50_HZ: Serial.println("50 Hz"); break;
-    case LPS22_RATE_75_HZ: Serial.println("75 Hz"); break;
-
-  }
+//  printIMU();
 }
