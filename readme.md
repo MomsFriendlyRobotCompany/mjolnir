@@ -8,6 +8,14 @@
 - adafruit: [LSM6DSOX + LIS3MDL 9DOF IMU](https://www.adafruit.com/product/4517)
 - adafruit: [LPS22 pressure sensor](https://www.adafruit.com/product/4633)
 
+## Interesting SW
+
+- https://github.com/alsora/ORB_SLAM2
+- https://github.com/uoip/stereo_ptam
+- https://github.com/petercorke/machinevision-toolbox-matlab
+- https://www.mdpi.com/2218-6581/9/3/56/htm
+- https://github.com/alspitz/cpu_monitor
+
 # MIT License
 
 **Copyright (c) 2020 Kevin J. Walchko**
