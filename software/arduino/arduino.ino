@@ -22,7 +22,8 @@ eCompass compass;
 
 
 //unsigned int cnt=0;
-float m[11];
+// float m[12]; // // accel(3), gyro(3), mag(3), pressure, temperature, altitude
+float m[7]; // accel(3), gyro(3), temperature
 byte const* p = reinterpret_cast<byte const *>(m);
 sensors_event_t a;
 sensors_event_t g;
@@ -52,13 +53,13 @@ void setup(void) {
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
   sox_setup();
-  
+
 }
 
 void loop() {
     bool freeRun = true;
     int b = 0;
-    
+
     if (Serial.available() > 0) {
         int b = Serial.read();
     }
@@ -74,27 +75,27 @@ void loop() {
       ax = a.acceleration.x / SENSORS_GRAVITY_STANDARD;
       ay = a.acceleration.y / SENSORS_GRAVITY_STANDARD;
       az = a.acceleration.z / SENSORS_GRAVITY_STANDARD;
-      
+
       wx = g.gyro.x;
       wy = g.gyro.y;
       wz = g.gyro.z;
-      
-      mx = mag.magnetic.x;
-      my = mag.magnetic.y;
-      mx = mag.magnetic.z;
-      
-      pres = bmp.pressure;
-      // temp = tmp.temperature; // C - faster? 
-      // temp = bmp.temperature; // C
-      temp = bmp.temperature*9.0/5.0+32.0; // F
-      alt = bmp.readAltitude(SENSORS_PRESSURE_SEALEVELHPA); // m
 
-      if(1) { // debug
+      // mx = mag.magnetic.x;
+      // my = mag.magnetic.y;
+      // mx = mag.magnetic.z;
+
+      // pres = bmp.pressure;
+      temp = tmp.temperature; // C - faster?
+      // temp = bmp.temperature; // C
+      // temp = bmp.temperature*9.0/5.0+32.0; // F
+      // alt = bmp.readAltitude(SENSORS_PRESSURE_SEALEVELHPA); // m
+
+      if(0) { // debug
             // Yaw, Pitch, Roll
             if (0) {
                 compass.update(ax, ay, az, mx,  my, mz);
                 compass.getEuler(roll, pitch, yaw);
-                
+
                 Serial.print("Orientation: ");
                 Serial.print(yaw, 2);
                 Serial.print(", ");
@@ -144,19 +145,19 @@ void loop() {
           m[0] = ax; // m/sec^2
           m[1] = ay;
           m[2] = az;
-    
+
           m[3] = wx; // rads/sec
           m[4] = wy;
           m[5] = wz;
-    
-          m[6] = mx;  // uT
-          m[7] = my;
-          m[8] = mz;
 
-          m[9] = pres;  // Pa
+          // m[6] = mx;  // uT
+          // m[7] = my;
+          // m[8] = mz;
+
+          // m[9] = pres;  // Pa
           m[10] = temp; // C
-          m[11] = alt;  // m
-    
+          // m[11] = alt;  // m
+
           Serial.write(0xff);
           Serial.write(p, sizeof(m));
       }

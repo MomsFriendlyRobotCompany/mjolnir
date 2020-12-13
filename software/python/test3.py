@@ -8,6 +8,10 @@ from math import log10, sin, cos, acos, atan2, asin, pi, sqrt
 from collections import deque
 import numpy as np
 import cv2
+from slurm.rate import Rate
+
+from opencv_camera import ThreadedCamera
+from opencv_camera.color_space import ColorSpace
 
 deg2rad = pi / 180.0
 RAD2DEG = 180/pi
@@ -152,7 +156,7 @@ class IMUDriver:
         return h
 
 
-# a = AverageFilter(10)
+af = AverageFilter(10)
 #
 # for i in range(20):
 #     v = np.array([i,i,i])
@@ -161,44 +165,72 @@ class IMUDriver:
 #
 # exit(0)
 
+loop_rate = Rate(100)
+
 last = time.monotonic()
 loop = 1
 rate = 0.0
 
 port = "/dev/tty.usbmodem14401"
-s = IMUDriver(port)
+# s = IMUDriver(port)
 
 # aa = AverageFilter(10)
-camera = cv2.VideoCapture(0)
+path = 0
+camera = ThreadedCamera()
+camera.open(path, resolution=(480,640), fmt=ColorSpace.gray)
+
+aa = af.avg()
+g = af.avg()
+t = 0
 
 try:
     while True:
-        ret = s.read()
-        if ret is None:
-            continue
+        if loop % 5:
+            ok, img = camera.read()
+            if ok:
+                pass
+            else:
+                img = np.array((1,1))
+            aa = af.avg()
 
-        a,g,t = ret
-        # a = (a[0]-0.11, a[1]-0.82, a[2])
-        # aa.append(np.array(a))
-        # a = aa.avg()
+            # roll, pitch, _ = s.compensate(aa)
+            # roll, pitch, _ = 0,0,0
+            # roll  *= RAD2DEG
+            # pitch *= RAD2DEG
+            # yaw   *= RAD2DEG
 
-        roll, pitch, _ = s.compensate(a)
-        # roll  *= RAD2DEG
-        # pitch *= RAD2DEG
-        # yaw   *= RAD2DEG
+            print(f"R: {rate:3.0f} I: {img.shape} A: {aa[0]:5.3f} {aa[1]:5.3f} {aa[2]:5.3f} G: {g[0]:5.2f} {g[1]:5.2f} {g[2]:5.2f} T: {t:3.1f}", end="\r")
+            # if ok and 100%20 == 0:
+            #     print(ok, img.shape)
 
-        if loop % 20 == 0:
-            # print(f"R: {rate:6.1f} A: {a[0]:5.3f} {a[1]:5.3f} {a[2]:5.3f} G: {g[0]:5.2f} {g[1]:5.2f} {g[2]:5.2f} M: {m[0]:5.1f} {m[1]:5.1f} {m[2]:5.1f}  H: {p:5.1f} T: {t:3.1f}", end="\r")
-            print(f"R: {rate:6.1f} A: {a[0]:5.3f} {a[1]:5.3f} {a[2]:5.3f} G: {g[0]:5.2f} {g[1]:5.2f} {g[2]:5.2f} T: {t:3.1f}", end="\r")
-            # print(f"roll: {roll:6.1f} pitch: {pitch:6.1f} yaw: {yaw:6.1f}", end="\r")
+        # ret = s.read()
+        ret = None
+        if ret:
+            a,g,t = ret
+            # a = (a[0]-0.11, a[1]-0.82, a[2])
+            af.append(np.array(a))
+            #
+            # roll, pitch, _ = s.compensate(a)
+            # roll  *= RAD2DEG
+            # pitch *= RAD2DEG
+            # yaw   *= RAD2DEG
+
+            # if loop % 20 == 0:
+            #     # print(f"R: {rate:6.1f} A: {a[0]:5.3f} {a[1]:5.3f} {a[2]:5.3f} G: {g[0]:5.2f} {g[1]:5.2f} {g[2]:5.2f} M: {m[0]:5.1f} {m[1]:5.1f} {m[2]:5.1f}  H: {p:5.1f} T: {t:3.1f}", end="\r")
+            #     print(f"R: {rate:6.1f} A: {a[0]:5.3f} {a[1]:5.3f} {a[2]:5.3f} G: {g[0]:5.2f} {g[1]:5.2f} {g[2]:5.2f} T: {t:3.1f}", end="\r")
+            #     # print(f"roll: {roll:6.1f} pitch: {pitch:6.1f} yaw: {yaw:6.1f}", end="\r")
 
         if loop % 100 == 0:
             now = time.monotonic()
             rate = 100/(now - last)
             last = now
+            # print(f">> Rate: {rate:0.3f} Hz")
 
         loop += 1
 
+        loop_rate.sleep()
+
 except KeyboardInterrupt:
-    s.close()
+    # s.close()
+    camera.close()
     print("\n\nbye ...\n")
