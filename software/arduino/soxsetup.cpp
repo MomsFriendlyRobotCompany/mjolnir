@@ -2,7 +2,7 @@
 
 extern Adafruit_LIS3MDL lis3mdl; // magnetometer
 //extern Adafruit_LPS22 lps;       // pressure/temperature
-extern Adafruit_BMP3XX bmp;
+//extern Adafruit_BMP3XX bmp;
 extern Adafruit_LSM6DSOX sox;    // accels/gyros
 
 const lsm6ds_data_rate_t accel_data_rate = LSM6DS_RATE_104_HZ;
@@ -185,33 +185,33 @@ void sox_setup(){
     sox.setGyroDataRate(gyro_data_rate);
 
     // Magnetometer -----------------------------------------------------
-  if (!lis3mdl.begin_I2C()) {
-    while (1) { 
-        delay(1000);
-        Serial.println("LIS3MDL NOT Found!");
-    }
-  }
-  lis3mdl.setPerformanceMode(LIS3MDL_MEDIUMMODE);
-  lis3mdl.setOperationMode(LIS3MDL_CONTINUOUSMODE);
-  lis3mdl.setDataRate(mag_data_rate);
-  lis3mdl.setRange(LIS3MDL_RANGE_4_GAUSS);
-  lis3mdl.setIntThreshold(500);
-  lis3mdl.configInterrupt(false, false, true, // enable z axis
-                          true, // polarity
-                          false, // don't latch
-                          true); // enabled!
+//  if (!lis3mdl.begin_I2C()) {
+//    while (1) { 
+//        delay(1000);
+//        Serial.println("LIS3MDL NOT Found!");
+//    }
+//  }
+//  lis3mdl.setPerformanceMode(LIS3MDL_MEDIUMMODE);
+//  lis3mdl.setOperationMode(LIS3MDL_CONTINUOUSMODE);
+//  lis3mdl.setDataRate(mag_data_rate);
+//  lis3mdl.setRange(LIS3MDL_RANGE_4_GAUSS);
+//  lis3mdl.setIntThreshold(500);
+//  lis3mdl.configInterrupt(false, false, true, // enable z axis
+//                          true, // polarity
+//                          false, // don't latch
+//                          true); // enabled!
 
   // Pressure/Temperature -----------------------------------------------
-  if (!bmp.begin_I2C()) {
-    while (1){
-        Serial.println("BMP3 NOT Found!");
-        delay(1000);
-    }
-  }
-  bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X); // sampling 90Hz 
-  bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
-  bmp.setOutputDataRate(BMP3_ODR_200_HZ);
+//  if (!bmp.begin_I2C()) {
+//    while (1){
+//        Serial.println("BMP3 NOT Found!");
+//        delay(1000);
+//    }
+//  }
+//  bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
+//  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X); // sampling 90Hz 
+//  bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
+//  bmp.setOutputDataRate(BMP3_ODR_200_HZ);
 
 //  printIMU();
 }

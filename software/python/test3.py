@@ -6,12 +6,15 @@ from serial import Serial
 import struct
 from math import log10, sin, cos, acos, atan2, asin, pi, sqrt
 from collections import deque
+from collections import namedtuple
 import numpy as np
 import cv2
 from slurm.rate import Rate
-
+import pickle
 from opencv_camera import ThreadedCamera
 from opencv_camera.color_space import ColorSpace
+
+ImageIMU = namedtuple("ImageIMU","image accel gyro temperature timestamp")
 
 deg2rad = pi / 180.0
 RAD2DEG = 180/pi
@@ -156,7 +159,14 @@ class IMUDriver:
         return h
 
 
-af = AverageFilter(10)
+def savePickle(data, filename):
+    with open(filename, 'wb') as fd:
+            d = pickle.dumps(data)
+            fd.write(d)
+
+
+af = AverageFilter(5)
+gf = AverageFilter(5)
 #
 # for i in range(20):
 #     v = np.array([i,i,i])
@@ -166,32 +176,48 @@ af = AverageFilter(10)
 # exit(0)
 
 loop_rate = Rate(100)
-
+images = []
 last = time.monotonic()
 loop = 1
 rate = 0.0
 
-port = "/dev/tty.usbmodem14401"
-# s = IMUDriver(port)
+# port = "/dev/tty.usbmodem14401"
+port = "/dev/tty.usbmodem14501"
+s = IMUDriver(port)
 
 # aa = AverageFilter(10)
 path = 0
 camera = ThreadedCamera()
-camera.open(path, resolution=(480,640), fmt=ColorSpace.gray)
+res = None
+# res = (480,640)
+# res = (720,2560)
+camera.open(path, resolution=res, fmt=ColorSpace.gray)
 
 aa = af.avg()
-g = af.avg()
+gg = gf.avg()
 t = 0
 
 try:
+    start = time.monotonic()
     while True:
         if loop % 5:
+            aa = af.avg()
+            gg = gf.avg()
             ok, img = camera.read()
+
             if ok:
-                pass
+                h,w = img.shape
+                si = cv2.resize(img, (w//2,h//2))
+                cv2.imshow('capture', si)
+                ch = cv2.waitKey(20)
+                if ch == ord('q'):
+                    break
+                elif ch == ord('s'):
+                    imgimu = ImageIMU(img,aa,gg,t,(time.monotonic() - start))
+                    images.append(imgimu)
+
             else:
                 img = np.array((1,1))
-            aa = af.avg()
 
             # roll, pitch, _ = s.compensate(aa)
             # roll, pitch, _ = 0,0,0
@@ -199,16 +225,17 @@ try:
             # pitch *= RAD2DEG
             # yaw   *= RAD2DEG
 
-            print(f"R: {rate:3.0f} I: {img.shape} A: {aa[0]:5.3f} {aa[1]:5.3f} {aa[2]:5.3f} G: {g[0]:5.2f} {g[1]:5.2f} {g[2]:5.2f} T: {t:3.1f}", end="\r")
+            print(f"R: {rate:3.0f} I: {img.shape} A: {aa[0]:5.2f} {aa[1]:5.2f} {aa[2]:5.2f} G: {gg[0]:5.2f} {gg[1]:5.2f} {gg[2]:5.2f} T: {t:2.1f}", end="\r")
             # if ok and 100%20 == 0:
             #     print(ok, img.shape)
 
-        # ret = s.read()
-        ret = None
+        ret = s.read()
+        # ret = None
         if ret:
             a,g,t = ret
             # a = (a[0]-0.11, a[1]-0.82, a[2])
             af.append(np.array(a))
+            gf.append(np.array(g))
             #
             # roll, pitch, _ = s.compensate(a)
             # roll  *= RAD2DEG
@@ -232,5 +259,10 @@ try:
 
 except KeyboardInterrupt:
     # s.close()
+    print("ctrl-C")
+finally:
     camera.close()
+    cv2.destroyAllWindows()
+    if len(images) > 0:
+        savePickle(images, "images.pickle")
     print("\n\nbye ...\n")

@@ -57,11 +57,11 @@ void setup(void) {
 }
 
 void loop() {
-    bool freeRun = true;
+    bool freeRun = false;
     int b = 0;
 
     if (Serial.available() > 0) {
-        int b = Serial.read();
+        b = Serial.read();
     }
 
     if (b == 'g' || freeRun){
@@ -155,21 +155,22 @@ void loop() {
           // m[8] = mz;
 
           // m[9] = pres;  // Pa
-          m[10] = temp; // C
+          m[6] = temp; // C
           // m[11] = alt;  // m
 
           Serial.write(0xff);
           Serial.write(p, sizeof(m));
+          Serial.write('\n');
       }
     }
-    else {
-        Serial.println("*");
-    }
+//    else {
+//        Serial.println("*");
+//    }
 
 //  cnt += 1;
 //  if (cnt == 65000) cnt = 0;  // value?
 //  }
 //  delay(100);
 
-//  delay(2); // 5ms => 200Hz | 4ms => 250Hz
+    delay(2); // 5ms => 200Hz | 4ms => 250Hz
 }
