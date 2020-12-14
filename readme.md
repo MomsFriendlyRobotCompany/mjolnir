@@ -5,8 +5,9 @@
 **Under Development**
 
 - sparkfun: [EX8029 stereo camera](https://www.sparkfun.com/products/14726)
+    - macOS USB3: 720x2560 (left 720x1280, right 720x1280)
 - adafruit: [LSM6DSOX + LIS3MDL 9DOF IMU](https://www.adafruit.com/product/4517)
-- adafruit: [LPS22 pressure sensor](https://www.adafruit.com/product/4633)
+- adafruit: [LPS22 pressure sensor](https://www.adafruit.com/product/4633) not using because it doesn't seem to work reliably
 - https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390l-ds001.pdf
 
 ## Interesting SW
