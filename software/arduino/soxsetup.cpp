@@ -13,7 +13,7 @@ const lis3mdl_dataRate_t mag_data_rate   = LIS3MDL_DATARATE_40_HZ;
 //const lps22_rate_t pressure_data_rate    = LPS22_RATE_10_HZ;
 
 
-void printIMU(){ 
+void printIMU(){
   Serial.print("Accelerometer range set to: ");
     switch (sox.getAccelRange()) {
   case LSM6DS_ACCEL_RANGE_2_G:
@@ -167,8 +167,8 @@ void printIMU(){
 }
 
 void sox_setup(){
-    
-  Wire.setClock(400000); // not sure this works?
+
+  Wire.setClock(400000); // 400 kHz
 
   if (!sox.begin_I2C()) {
     while (1) {
@@ -186,7 +186,7 @@ void sox_setup(){
 
     // Magnetometer -----------------------------------------------------
 //  if (!lis3mdl.begin_I2C()) {
-//    while (1) { 
+//    while (1) {
 //        delay(1000);
 //        Serial.println("LIS3MDL NOT Found!");
 //    }
@@ -209,7 +209,7 @@ void sox_setup(){
 //    }
 //  }
 //  bmp.setTemperatureOversampling(BMP3_OVERSAMPLING_8X);
-//  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X); // sampling 90Hz 
+//  bmp.setPressureOversampling(BMP3_OVERSAMPLING_4X); // sampling 90Hz
 //  bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
 //  bmp.setOutputDataRate(BMP3_ODR_200_HZ);
 

@@ -165,7 +165,7 @@ last = time.monotonic()
 loop = 1
 rate = 0.0
 
-port = "/dev/tty.usbmodem14401"
+port = "/dev/tty.usbmodem14601"
 s = IMUDriver(port)
 
 # aa = AverageFilter(10)
