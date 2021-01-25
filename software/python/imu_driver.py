@@ -4,6 +4,7 @@ import struct
 from math import log10, sin, cos, acos, atan2, asin, pi, sqrt
 import time
 from collections import namedtuple
+from colorama import Fore
 
 agmpt_t = namedtuple("agmpt_t", "accel gyro mag pressure temperature timestamp")
 
@@ -40,15 +41,41 @@ class AGMPT:
         # t = t*9/5+32  # F
         return a,g,m,p,t
 
+class AGMPTBN055:
+    size = 18
+    header = b"\xff"
+
+    def decode(self, data):
+        if len(data) != self.size*4:
+            return None
+
+        try:
+            msg = struct.unpack("f"*self.size, data)
+            a = msg[:3]   # g's
+            g = msg[3:6]  # rads/sec
+            m = msg[6:9]  # normalized to uTesla
+            p = msg[9]    # pressure hPa
+            t = msg[10]   # C
+            bnq = msg[11:15] # BN055 quaternion
+            bne = msg[15:] # BN055 euler
+            # t = t*9/5+32  # F
+        except Exception as e:
+            print(f"{Fore.RED}*** {e} ***{Fore.RESET}")
+            return None
+
+        return a,g,m,p,t,bnq,bne
+
 class IMUDriver:
     __slots__ = ["s", "decoder"]
     # s = attr.ib(default=None)
     # port = attr.ib()
     # speed
     def __init__(self, port, decoder):
-        speed = 115200
+        # speed = 115200
+        speed = 1000000
         self.s = Serial(port, speed, timeout=0.005)
         self.decoder = decoder
+        print(f">> IMUDriver opened {port}@{speed}")
 
     def close(self):
         self.s.close()
@@ -61,33 +88,32 @@ class IMUDriver:
         self.s.write(b"g")
         # self.s.flushOutput()
         bad = True
-        time.sleep(0.001)
+        time.sleep(0.0001)
 
         # read 2 times the data size looking for the
         # start character
         header = self.decoder.header
-        for _ in range(50):
+        for x in range(50):
             m = self.s.read(1)
             if m == header:
                 bad = False
                 break
 
-            self.s.write(b"g")
-            time.sleep(0.001)
+            if (x % 2) == 0:
+                self.s.write(b"g")
+            time.sleep(0.0001)
 
         if bad:
             print("** read fail **")
             return None
+
         data = self.s.read(data_size)
         num = len(data)
         while num != data_size:
             data += self.s.read(num-len(data))
 
-        # print(f">> data[{len(data)}]: {data}")
+        return self.decoder.decode(data)
 
-        ret = self.decoder.decode(data)
-
-        return ret
 
     def compensate(self, accel, mag=None):
         """

@@ -32,7 +32,7 @@ def savePickle(data, filename):
             d = pickle.dumps(data)
             fd.write(d)
 
-port = "/dev/tty.usbmodem14601"
+port = "/dev/tty.usbmodem14501"
 # port = "/dev/tty.usbmodem14501"
 s = IMUDriver(port, AGMPT())
 

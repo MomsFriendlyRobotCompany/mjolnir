@@ -15,15 +15,21 @@
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_LIS3MDL.h>
 #include <Adafruit_Sensor.h> // SENSORS_PRESSURE_SEALEVELHPA, SENSORS_GRAVITY_STANDARD
-
+//#include <Adafruit_BNO08x.h>
 #include <Adafruit_BNO055.h>
+
+
+//#define BNO08X_RESET 5
 
 Adafruit_LIS3MDL lis3mdl; // magnetometer
 Adafruit_BMP3XX bmp;
 Adafruit_LSM6DSOX sox;    // accels/gyros
 Adafruit_BNO055 bno;
+//Adafruit_BNO08x  bno08x(BNO08X_RESET);
 
- float m[11]; // // accel(3), gyro(3), mag(3), pressure, temperature
+// Header (0xFF) adds 1 to m array
+ float m[18]; // // accel(3), gyro(3), mag(3), pressure, temperature,bno.q(4),bno.euler(3)
+// float m[11]; // // accel(3), gyro(3), mag(3), pressure, temperature
 //float m[8]; // accel(3), gyro(3), pressure, temperature
 byte const* p = reinterpret_cast<byte const *>(m);
 sensors_event_t a;
@@ -39,10 +45,15 @@ float temp;
 unsigned long start = 0;
 unsigned int count = 1;
 const float invg = 1.0/SENSORS_GRAVITY_STANDARD;
+imu::Quaternion bnoq;
+imu::Vector bnoe;
+
+//sh2_SensorValue_t sensorValue;
 
 
 void setup(void) {
-    Serial.begin(115200);
+//    Serial.begin(115200);
+    Serial.begin(1000000);
     Serial.setTimeout(1);
     while (!Serial)
         delay(1000); // will pause Zero, Leonardo, etc until serial console opens
@@ -84,7 +95,7 @@ void setup(void) {
         }
     }
 
-    if (1) {
+    if (0) {
         // datasheet, drone, table 9, pg 17
         bmp.setTemperatureOversampling(BMP3_NO_OVERSAMPLING);
         bmp.setPressureOversampling(BMP3_OVERSAMPLING_8X);
@@ -107,7 +118,19 @@ void setup(void) {
 
     bno.setExtCrystalUse(true);
 
-  start = millis();
+//    if (!bno08x.begin_I2C()) {
+//        Serial.println("Failed to find BNO08x chip");
+//        while (1) { delay(10); }
+//    }
+//    bno08x.hardwareReset();
+//    
+//    Serial.println("Setting desired reports");
+//    if (! bno08x.enableReport(SH2_GAME_ROTATION_VECTOR)) {
+//        Serial.println("Could not enable game vector");
+//    }
+//    delay(100);
+
+    start = micros();
 
 }
 
@@ -131,7 +154,7 @@ void loop() {
 
     mx = mag.magnetic.x;
     my = mag.magnetic.y;
-    mx = mag.magnetic.z;
+    mz = mag.magnetic.z;
 
     pres = bmp.pressure;
     temp = tmp.temperature; // C - faster?
@@ -147,21 +170,21 @@ void loop() {
     // - VECTOR_EULER         - degrees
     // - VECTOR_LINEARACCEL   - m/s^2
     // - VECTOR_GRAVITY       - m/s^2
-    imu::Vector<3> bnoa = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
-    imu::Vector<3> bnow = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
-    imu::Vector<3> bnom = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+//    imu::Vector bnoa = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+//    imu::Vector bnow = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+//    imu::Vector bnom = bno.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+    bnoq = bno.getQuat();
+    bnoe = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
 
-    imu::Quaternion q = bno.getQuat();
-
-    if (1 && (count % 100 == 0)){
-        unsigned long now = millis();
-        float hz = 1000.0*float(count+1)/float(now - start);
+    if (0 && (count % 100 == 0)){
+        unsigned long now = micros();
+        float hz = 1000000.0*float(count+1)/float(now - start);
         Serial.println(hz,2);
 //        Serial.println(pres,2);
 //        Serial.print(wy,2);
 //        Serial.print(",");
 //        Serial.println(wx,2);
-        count = 0;
+        count = 1;
         start = now;
     }
     else {
@@ -175,7 +198,7 @@ void loop() {
         for (int i=0; i<numChar; i++)
             if (Serial.read() == 'g') b = 'g';
     }
-    if(b == 'g' || freeRun) {
+    if (b == 'g' || freeRun) {
         m[0] = ax; // m/sec^2
         m[1] = ay;
         m[2] = az;
@@ -191,9 +214,18 @@ void loop() {
         m[9] = pres; // Pa
         m[10] = temp; // C
 
+        m[11] = bnoq.w; // bno quaternion
+        m[12] = bnoq.x;
+        m[13] = bnoq.y;
+        m[14] = bnoq.z;
+        
+        m[15] = bnoe.x; // bno euler
+        m[16] = bnoe.y;
+        m[17] = bnoe.z;
+
         Serial.write(0xff);
         Serial.write(p, sizeof(m));
-        Serial.write('\n');
+//        Serial.write('\n');
     }
 
     // 5000  -> 200Hz
