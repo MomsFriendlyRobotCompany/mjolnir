@@ -111,11 +111,13 @@ module plate(thick){
         }
         translate([10,0,-2]){
             // usb-c cable hole
-            translate([-20,6.5,0]) cube([20,15,thick+4]);
-            translate([0,14,0]) cylinder(h=thick+4, d=15);
+            I change the width from 15mm to 13 mm double check
+            translate([-20,6.5,0]) cube([20,13,thick+4]);
+            translate([0,12.5,0]) cylinder(h=thick+4, d=13);
 
             // qtpy divit
-            translate([2,4,thick]) cube([20.574+2,17.78+2,1.5+2]);
+            buff = 0.5;
+            translate([2,4,thick]) cube([20.574+buff,17.78+buff,1.5+2]);
 
             // zip tye cutouts
             translate([15,3,0]) {
