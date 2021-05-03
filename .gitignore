@@ -4,3 +4,4 @@
 *.pickle
 .ipynb_checkpoints
 allen
+*_AllanVar.npy
