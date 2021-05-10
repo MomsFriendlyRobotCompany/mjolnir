@@ -45,12 +45,14 @@ class AGMPT:
 class AGMPTL:
     size = 12
     header = b"\xff"
+    unpack = struct.Struct("ffffffffffff").unpack
 
     def decode(self, data):
         if len(data) != self.size*4:
             return None
 
-        msg = struct.unpack("ffffffffffff", data)
+        # msg = struct.unpack("ffffffffffff", data)
+        msg = self.unpack(*data)
         a = msg[:3]   # g's
         g = msg[3:6]  # rads/sec
         m = msg[6:9]  # normalized to uTesla
