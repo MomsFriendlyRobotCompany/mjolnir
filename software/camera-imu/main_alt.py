@@ -59,8 +59,8 @@ class Compressor:
             fmt = "." + fmt
         self._format = fmt
 
-    def compress(self, img):
-        jpeg_quality = 80
+    def compress(self, img, jpeg_quality=80):
+        # jpeg_quality = 80
         params = [int(cv2.IMWRITE_JPEG_QUALITY), jpeg_quality]
         # ok, cb = cv2.imencode(self._format, img, params)
         ok, cb = True, img
