@@ -41,6 +41,14 @@ b055   0xA0 imu
 #include "sensor.hpp"
 #include "rate.hpp"
 
+// #include <Adafruit_MLX90640.h>
+// Adafruit_MLX90640 mlx;
+//float frame[32*24]; // buffer for full frame of temperatures
+// union { byte b[32*24*sizeof(float)]; float f[32*24]; } data;
+// const int frameSize = 32*24*sizeof(float); // 3072
+const byte sbuff[] = {0xFF,0xFF,0xFF,0xDD};
+const byte ebuff[] = {0xEE,0xEE};
+
 // sensors
 TFmini tfmini;  // distance
 gciLSOXLIS imu; // accel / gyro / mag
@@ -53,16 +61,25 @@ void setup(void) {
         delay(1000);
 
     // lidar
-    Serial1.begin(TFmini::DEFAULT_BAUDRATE);
-    tfmini.attach(Serial1);
+//    Serial1.begin(TFmini::DEFAULT_BAUDRATE);
+//    tfmini.attach(Serial1);
 
-    Wire.setClock(400000); // 400 kHz
+    Wire.setClock(1000000); // 800 kHz
 
     // accel / gyro / mag
     imu.init();
 
     // pressure / temperature
     pres.init();
+
+    // ir camera
+    // if (! mlx.begin(MLX90640_I2CADDR_DEFAULT, &Wire)) {
+    //     Serial.println("MLX90640 not found!");
+    //     while (1) delay(10);
+    // }
+    // mlx.setMode(MLX90640_CHESS);
+    // mlx.setResolution(MLX90640_ADC_16BIT);
+    // mlx.setRefreshRate(MLX90640_4_HZ);
 }
 
 Packer packer(&Serial);
@@ -86,17 +103,26 @@ void loop() {
         if (b == 'g') {
             imu.read();
             pres.read();
-//            if (tfmini.available()) distance = tfmini.getDistance();
-            if (cnt % 2 == 0 && tfmini.available()) distance = tfmini.getDistance();
-            ++cnt;
+//            if (cnt++ % 2 == 0 && tfmini.available()) distance = tfmini.getDistance();
         
             // Send data
             // [FF,FF,msgLen, ...., EE,EE]
             packer.begin();
             if (imu.found) packer.frame(imu.id, imu.data.b, imu.bsize); // 10
             if (pres.found) packer.frame(pres.id, pres.data.b, pres.bsize); // 2
-            packer.frame(0xF7, distance);   // 1
+//            packer.frame(0xF7, distance);   // 1
             packer.end();
+        }
+        else if (b == 'i'){
+            if (mlx.getFrame(data.f) == 0) {
+//                Serial.println("\nimage");
+                Serial.write(sbuff, 4); // ff,ff,ff,dd
+                Serial.write(data.b, frameSize);
+                Serial.write(ebuff, 2); // ee,ee
+            }
+//            else {
+//                Serial.println("no image");
+//            }
         }
     }
 }

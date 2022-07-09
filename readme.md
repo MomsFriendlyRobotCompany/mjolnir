@@ -18,6 +18,33 @@
 - https://www.mdpi.com/2218-6581/9/3/56/htm
 - https://github.com/alspitz/cpu_monitor
 
+```
+ |-----+--------------+--------------------------------------------------------------|
+ | No. | Layer        | Description ( in simple terms and not academic in nature )   |
+ |-----+--------------+--------------------------------------------------------------|
+ | 7   | Application  | High level API(e.g HTTP, Websocket)                          |
+ |-----+--------------+--------------------------------------------------------------|
+ | 6   | Presentation | This is where the data form the network                      |
+ |     |              | is translated to the application (encoding,                  |
+ |     |              | compression, encryption). This is where TLS lives.           |
+ |-----+--------------+--------------------------------------------------------------|
+ | 5   | Session      | Where the sessions are established, think Sockets.           |
+ |-----+--------------+--------------------------------------------------------------|
+ | 4   | Transport    | Provides the means to send variable length data sequences.   |
+ |     |              | Think TCP, UDP.                                              |
+ |-----+--------------+--------------------------------------------------------------|
+ | 3   | Network      | Provides the capability to send data sequences between       |
+ |     |              | different networks. Think of routing of datagrams.           |
+ |-----+--------------+--------------------------------------------------------------|
+ | 2   | Data link    | This layer is in charge of the node to node data transfer.   |
+ |     |              | Directly connected nodes.                                    |
+ |-----+--------------+--------------------------------------------------------------|
+ | 1   | Physical     | In this layer data is transmitted/received to/from a         |
+ |     |              | physical device.                                             |
+ |-----+--------------+--------------------------------------------------------------|
+```
+
+
 # MIT License
 
 **Copyright (c) 2020 Kevin J. Walchko**

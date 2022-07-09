@@ -7,7 +7,7 @@
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_LIS3MDL.h>
 
-enum class Sensors { 
+enum class Sensors {
     SOXLIS = 0xF1,
     S33LIS = 0xF0,
     DPS310 = 0xB1
@@ -17,7 +17,7 @@ class gciLSOXLIS {
 public:
 
     static const uint8_t id = uint8_t(Sensors::SOXLIS);
-    
+
     gciLSOXLIS(): found(false), soxFound(false), magFound(false),
 //        pbuffer(reinterpret_cast<byte const *>(buffer)),
         bsize(10*sizeof(float)),
@@ -26,11 +26,11 @@ public:
     void init(){
         if (sox.begin_I2C()) {
             soxFound = true;
-    
+
             // Accelerometer ------------------------------------------
             sox.setAccelRange(LSM6DS_ACCEL_RANGE_4_G);
             sox.setAccelDataRate(LSM6DS_RATE_208_HZ);
-    
+
             // Gyros ----------------------------------------------------
             sox.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
             sox.setGyroDataRate(LSM6DS_RATE_208_HZ);
@@ -52,50 +52,28 @@ public:
     void read(){
         if (soxFound) {
             sox.getEvent(&a,&g,&t);
-//    
-//            ax = a.acceleration.x * invg;
-//            ay = a.acceleration.y * invg;
-//            az = a.acceleration.z * invg;
-//    
-//            wx = g.gyro.x;
-//            wy = g.gyro.y;
-//            wz = g.gyro.z;
-//
-//            temperature = t.temperature;
 
-            
             data.f[0] = a.acceleration.x * invg;
             data.f[1] = a.acceleration.y * invg;
             data.f[2] = a.acceleration.z * invg;
-    
+
             data.f[3] = g.gyro.x;
             data.f[4] = g.gyro.y;
             data.f[5] = g.gyro.z;
 
-            data.f[6] = t.temperature;
+            data.f[9] = t.temperature;
         }
 
         if (magFound){
             lis3mdl.getEvent(&mag);
-//    
-//            mx = mag.magnetic.x;
-//            my = mag.magnetic.y;
-//            mz = mag.magnetic.z;
 
-            
-            data.f[7] = mag.magnetic.x;
-            data.f[8] = mag.magnetic.y;
-            data.f[9] = mag.magnetic.z;
+            data.f[6] = mag.magnetic.x;
+            data.f[7] = mag.magnetic.y;
+            data.f[8] = mag.magnetic.z;
         }
     }
-    
+
     bool found;
-//    float ax, ay, az;
-//    float mx, my, mz;
-//    float wx, wy, wz;
-//    float temperature;
-//    float buffer[10];
-//    byte const* pbuffer;
 
     union { byte b[10*sizeof(float)]; float f[10]; } data;
     const uint8_t bsize; // length of array
@@ -118,10 +96,10 @@ class gciDPS310 {
 public:
 
     static const uint8_t id = uint8_t(Sensors::DPS310);
-    
+
     gciDPS310(): bsize(2*sizeof(float)), found(false) {;}
 
-    /* Sets up the sensor */
+    // Sets up the sensor
     void init(){
         if (dps.begin_I2C()) {
             dps.configurePressure(DPS310_64HZ, DPS310_64SAMPLES);
@@ -134,8 +112,6 @@ public:
         if (found){
             if (dps.temperatureAvailable() || dps.pressureAvailable()) {
                 dps.getEvents(&temp_event, &pressure_event);
-//                temperature = temp_event.temperature;
-//                pressure = pressure_event.pressure;
                 data.f[0] = temp_event.temperature;
                 data.f[1] = pressure_event.pressure;
             }
@@ -143,12 +119,10 @@ public:
     }
 
     bool found;
-//    float pressure;
-//    float temperature;
 
     union { byte b[2*sizeof(float)]; float f[2]; } data;
     const uint8_t bsize; // length of array
-    
+
 protected:
     Adafruit_DPS310 dps; // pressure / temperature
     sensors_event_t temp_event, pressure_event;
@@ -188,8 +162,8 @@ protected:
 //protected:
 //
 //    void setReports(){
-//        
+//
 //    }
 //    Adafruit_BNO08x bno08x(-1);
-//    
+//
 //}
