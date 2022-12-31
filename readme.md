@@ -2,47 +2,35 @@
 
 # Mjolnir
 
+Trying to develop some interesting robotic camera/software solutions.
+
 **Under Development**
 
-- sparkfun: [EX8029 stereo camera](https://www.sparkfun.com/products/14726)
-    - macOS USB3: 720x2560 (left 720x1280, right 720x1280)
-- adafruit: [LSM6DSOX + LIS3MDL 9DOF IMU](https://www.adafruit.com/product/4517)
-- adafruit: [LPS22 pressure sensor](https://www.adafruit.com/product/4633) not using because it doesn't seem to work reliably
-- https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390l-ds001.pdf
+- EX8029
+    - **Discontinued**, Linux never worked correctly but macOS worked nicely
+    - sparkfun: [EX8029 stereo camera](https://www.sparkfun.com/products/14726)
+        - macOS USB3: 720x2560 (left 720x1280, right 720x1280)
+        - rolling shutter
+- Picamera
+    - Waveshare CM4-IO-A board with 2 picameras (rolling shutter)
+    - `piOS Lite` Bullseye, 64-bit
+    - CM4 seemed to die on me ... can't get another one, stupid Pi Foundation
+- Arducam Global Shutter (single camera)
+- Inertial Sensors
+    - Adafruit: [LSM6DSOX + LIS3MDL 9DOF IMU](https://www.adafruit.com/product/4517)
+    - Adafruit: [BMP390 - Precision Barometric Pressure and Altimeter](https://www.adafruit.com/product/4816)
+        - https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390l-ds001.pdf
 
 ## Interesting SW
 
-- https://github.com/alsora/ORB_SLAM2
-- https://github.com/uoip/stereo_ptam
-- https://github.com/petercorke/machinevision-toolbox-matlab
-- https://www.mdpi.com/2218-6581/9/3/56/htm
-- https://github.com/alspitz/cpu_monitor
-
-```
- |-----+--------------+--------------------------------------------------------------|
- | No. | Layer        | Description ( in simple terms and not academic in nature )   |
- |-----+--------------+--------------------------------------------------------------|
- | 7   | Application  | High level API(e.g HTTP, Websocket)                          |
- |-----+--------------+--------------------------------------------------------------|
- | 6   | Presentation | This is where the data form the network                      |
- |     |              | is translated to the application (encoding,                  |
- |     |              | compression, encryption). This is where TLS lives.           |
- |-----+--------------+--------------------------------------------------------------|
- | 5   | Session      | Where the sessions are established, think Sockets.           |
- |-----+--------------+--------------------------------------------------------------|
- | 4   | Transport    | Provides the means to send variable length data sequences.   |
- |     |              | Think TCP, UDP.                                              |
- |-----+--------------+--------------------------------------------------------------|
- | 3   | Network      | Provides the capability to send data sequences between       |
- |     |              | different networks. Think of routing of datagrams.           |
- |-----+--------------+--------------------------------------------------------------|
- | 2   | Data link    | This layer is in charge of the node to node data transfer.   |
- |     |              | Directly connected nodes.                                    |
- |-----+--------------+--------------------------------------------------------------|
- | 1   | Physical     | In this layer data is transmitted/received to/from a         |
- |     |              | physical device.                                             |
- |-----+--------------+--------------------------------------------------------------|
-```
+- [opencv_camera](https://pypi.org/project/opencv-camera/)
+- [moms_apriltag](https://pypi.org/project/moms-apriltag/)
+- Others
+    - https://github.com/alsora/ORB_SLAM2
+    - https://github.com/uoip/stereo_ptam
+    - https://github.com/petercorke/machinevision-toolbox-matlab
+    - https://www.mdpi.com/2218-6581/9/3/56/htm
+    - https://github.com/alspitz/cpu_monitor
 
 
 # MIT License
