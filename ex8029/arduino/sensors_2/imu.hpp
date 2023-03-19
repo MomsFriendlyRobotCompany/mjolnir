@@ -39,19 +39,30 @@ timestamp: unsigned long = millis(), overflow in 50 days
 */
 
 #if 1
-constexpr uint8_t imuNumFloats = 8;
 
-class gciLSOX: public mSensor<imuNumFloats> {
+// ax,ay,az    g
+// wx,wy,wz    rad/sec
+// temperature C
+// time stamp  millisecond
+constexpr uint8_t NUMM_FLOATS = 8;
+#define NO_CORRECTIONS true
+
+class gciLSOX: public mSensor<NUMM_FLOATS> {
   public:
+    bool soxFound;
+    bool lisFound;
+    bool bmpFound;
 
-    gciLSOX(): mSensor<imuNumFloats>(IMU_AGT),
+    gciLSOX(): mSensor<NUMM_FLOATS>(IMU_AGT),
         soxFound(false),
-        sm{{ 1.00268927, -0.00056029, -0.00190925, -0.00492348},
-            {-0.00138898,  0.99580818, -0.00227335,  0.00503835},
-            {-0.01438271,  0.00673172,  0.9998954 , -0.01364759}},
-        gbias{-0.00889949 -0.00235061 -0.00475294},
+        // sm{{ 1.00268927, -0.00056029, -0.00190925, -0.00492348},
+        //     {-0.00138898,  0.99580818, -0.00227335,  0.00503835},
+        //     {-0.01438271,  0.00673172,  0.9998954 , -0.01364759}},
+        // gbias{-0.00889949 -0.00235061 -0.00475294},
+        lisFound(false),
         // mbias{-13.15340002, 29.7714855, 0.0645215},
         // mm{0.96545537,0.94936676,0.967698},
+        bmpFound(false),
         sox(&Wire) {}
 
     void init() {
@@ -90,7 +101,7 @@ class gciLSOX: public mSensor<imuNumFloats> {
         if (soxFound) {
             LSM6DSOX::sox_t s = sox.read();
 
-            #if 0
+            #if NO_CORRECTIONS
             data.f[0] = s.ax; // g
             data.f[1] = s.ay; 
             data.f[2] = s.az;
@@ -100,7 +111,7 @@ class gciLSOX: public mSensor<imuNumFloats> {
             data.f[2] = sm[2][0] * s.ax + sm[2][1] * s.ay + sm[2][2] * s.az + sm[2][3];
             #endif
 
-            #if 0
+            #if NO_CORRECTIONS
             data.f[3] = s.gx; // rad/s
             data.f[4] = s.gy;
             data.f[5] = s.gz;
@@ -129,7 +140,7 @@ class gciLSOX: public mSensor<imuNumFloats> {
         // if (magFound) {
         //     LIS3MDL::mag_t s = lis3mdl.read(); 
 
-        //     #if 0
+        //     #if NO_CORRECTIONS
         //     data.f[7] = s.x; // uT
         //     data.f[8] = s.y;
         //     data.f[9] = s.z;
@@ -154,9 +165,9 @@ class gciLSOX: public mSensor<imuNumFloats> {
     }
 
   protected:
-    bool soxFound;
-    // bool magFound;
-    // bool pressFound;
+    // bool soxFound;
+    // bool lisFound;
+    // bool bmpFound;
 
     // QCF qcf;
 
@@ -166,149 +177,149 @@ class gciLSOX: public mSensor<imuNumFloats> {
     // Quaternion q;
     // float dt;       // time difference between samples
     // uint32_t ts;    // timestamp (msec)
-    float sm[3][4]; // accel scale/bias
-    float gbias[3]; // gyro bias
+    // float sm[3][4]; // accel scale/bias
+    // float gbias[3]; // gyro bias
     // float mbias[3]; // mag bias
     // float mm[3];    // mag scale
 };
 #endif
 
 
-#if 0
-constexpr uint8_t imuNumFloats = 17;
+// #if 0
+// constexpr uint8_t imuNumFloats = 17;
 
-class gciLSOXLISBMP: public mSensor<imuNumFloats> {
-  public:
+// class gciLSOXLISBMP: public mSensor<imuNumFloats> {
+//   public:
 
-    gciLSOXLISBMP(): mSensor<imuNumFloats>(IMU_AGMQPT),
-        soxFound(false), magFound(false), pressFound(false),
-        qcf(0.02),
-        sm{{ 1.00268927, -0.00056029, -0.00190925, -0.00492348},
-            {-0.00138898,  0.99580818, -0.00227335,  0.00503835},
-            {-0.01438271,  0.00673172,  0.9998954 , -0.01364759}},
-        gbias{-0.00889949 -0.00235061 -0.00475294},
-        mbias{-13.15340002, 29.7714855, 0.0645215},
-        mm{0.96545537,0.94936676,0.967698},
-        sox(&Wire), lis3mdl(&Wire), bmp(&Wire) {}
+//     gciLSOXLISBMP(): mSensor<imuNumFloats>(IMU_AGMQPT),
+//         soxFound(false), magFound(false), pressFound(false),
+//         qcf(0.02),
+//         sm{{ 1.00268927, -0.00056029, -0.00190925, -0.00492348},
+//             {-0.00138898,  0.99580818, -0.00227335,  0.00503835},
+//             {-0.01438271,  0.00673172,  0.9998954 , -0.01364759}},
+//         gbias{-0.00889949 -0.00235061 -0.00475294},
+//         mbias{-13.15340002, 29.7714855, 0.0645215},
+//         mm{0.96545537,0.94936676,0.967698},
+//         sox(&Wire), lis3mdl(&Wire), bmp(&Wire) {}
 
-    void init() {
-        if (sox.init()) {
-            soxFound = true;
+//     void init() {
+//         if (sox.init()) {
+//             soxFound = true;
 
-            // Accelerometer ------------------------------------------
-            // sox.setAccelRange(LSM6DS_ACCEL_RANGE_4_G);
-            // sox.setAccelDataRate(LSM6DS_RATE_104_HZ);
+//             // Accelerometer ------------------------------------------
+//             // sox.setAccelRange(LSM6DS_ACCEL_RANGE_4_G);
+//             // sox.setAccelDataRate(LSM6DS_RATE_104_HZ);
 
-            // Gyros ----------------------------------------------------
-            // sox.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
-            // sox.setGyroDataRate(LSM6DS_RATE_104_HZ);
-        }
+//             // Gyros ----------------------------------------------------
+//             // sox.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
+//             // sox.setGyroDataRate(LSM6DS_RATE_104_HZ);
+//         }
 
-        // Magnetometer -----------------------------------------------------
-        if (lis3mdl.init()) {
-            magFound = true;
-            // lis3mdl.setPerformanceMode(LIS3MDL_ULTRAHIGHMODE); // 155 already
-            // does this lis3mdl.setPerformanceMode(LIS3MDL_HIGHMODE); // 300
-            // already does this
-            // lis3mdl.setOperationMode(LIS3MDL_CONTINUOUSMODE);
-            // lis3mdl.setDataRate(LIS3MDL_DATARATE_300_HZ); // sets LIS3MDL_HIGHMODE
-            // lis3mdl.setRange(LIS3MDL_RANGE_4_GAUSS);
-        }
+//         // Magnetometer -----------------------------------------------------
+//         if (lis3mdl.init()) {
+//             magFound = true;
+//             // lis3mdl.setPerformanceMode(LIS3MDL_ULTRAHIGHMODE); // 155 already
+//             // does this lis3mdl.setPerformanceMode(LIS3MDL_HIGHMODE); // 300
+//             // already does this
+//             // lis3mdl.setOperationMode(LIS3MDL_CONTINUOUSMODE);
+//             // lis3mdl.setDataRate(LIS3MDL_DATARATE_300_HZ); // sets LIS3MDL_HIGHMODE
+//             // lis3mdl.setRange(LIS3MDL_RANGE_4_GAUSS);
+//         }
 
-        if (bmp.init()) {
-          pressFound = true;
-        }
+//         if (bmp.init()) {
+//           pressFound = true;
+//         }
 
-        found = magFound && soxFound && pressFound;
-        ts = millis();
-    }
+//         found = magFound && soxFound && pressFound;
+//         ts = millis();
+//     }
 
-    void read() {
-        if (soxFound) {
-            LSM6DSOX::sox_t s = sox.read();
+//     void read() {
+//         if (soxFound) {
+//             LSM6DSOX::sox_t s = sox.read();
 
-            #if 0
-            data.f[0] = s.ax; // g
-            data.f[1] = s.ay; 
-            data.f[2] = s.az;
-            #else
-            data.f[0] = sm[0][0] * s.ax + sm[0][1] * s.ay + sm[0][2] * s.az + sm[0][3];
-            data.f[1] = sm[1][0] * s.ax + sm[1][1] * s.ay + sm[1][2] * s.az + sm[1][3];
-            data.f[2] = sm[2][0] * s.ax + sm[2][1] * s.ay + sm[2][2] * s.az + sm[2][3];
-            #endif
+//             #if 0
+//             data.f[0] = s.ax; // g
+//             data.f[1] = s.ay; 
+//             data.f[2] = s.az;
+//             #else
+//             data.f[0] = sm[0][0] * s.ax + sm[0][1] * s.ay + sm[0][2] * s.az + sm[0][3];
+//             data.f[1] = sm[1][0] * s.ax + sm[1][1] * s.ay + sm[1][2] * s.az + sm[1][3];
+//             data.f[2] = sm[2][0] * s.ax + sm[2][1] * s.ay + sm[2][2] * s.az + sm[2][3];
+//             #endif
 
-            #if 0
-            data.f[3] = s.gx; // rad/s
-            data.f[4] = s.gy;
-            data.f[5] = s.gz;
-            #else
-            data.f[3] = (s.gx - gbias[0]);
-            data.f[4] = (s.gy - gbias[1]);
-            data.f[5] = (s.gz - gbias[2]);
-            #endif
+//             #if 0
+//             data.f[3] = s.gx; // rad/s
+//             data.f[4] = s.gy;
+//             data.f[5] = s.gz;
+//             #else
+//             data.f[3] = (s.gx - gbias[0]);
+//             data.f[4] = (s.gy - gbias[1]);
+//             data.f[5] = (s.gz - gbias[2]);
+//             #endif
 
-            data.f[6] = s.temp; // C
+//             data.f[6] = s.temp; // C
 
-            uint32_t now = millis();
-            dt = (now - ts) * 0.001;
-            ts = now;
+//             uint32_t now = millis();
+//             dt = (now - ts) * 0.001;
+//             ts = now;
 
-            q = qcf.update(data.f[0], data.f[1], data.f[2],data.f[3], data.f[4], data.f[5], dt);
+//             q = qcf.update(data.f[0], data.f[1], data.f[2],data.f[3], data.f[4], data.f[5], dt);
 
-            data.f[10] = q.w;
-            data.f[11] = q.x;
-            data.f[12] = q.y;
-            data.f[13] = q.z;
+//             data.f[10] = q.w;
+//             data.f[11] = q.x;
+//             data.f[12] = q.y;
+//             data.f[13] = q.z;
 
-            data.l[16] = now; // time msec
-        }
+//             data.l[16] = now; // time msec
+//         }
 
-        if (magFound) {
-            LIS3MDL::mag_t s = lis3mdl.read(); 
+//         if (magFound) {
+//             LIS3MDL::mag_t s = lis3mdl.read(); 
 
-            #if 0
-            data.f[7] = s.x; // uT
-            data.f[8] = s.y;
-            data.f[9] = s.z;
-            #else
-            data.f[7] = mm[0] * s.x - mbias[0]; // uT
-            data.f[8] = mm[1] * s.y - mbias[1];
-            data.f[9] = mm[2] * s.z - mbias[2];
-            #endif            
-        }
+//             #if 0
+//             data.f[7] = s.x; // uT
+//             data.f[8] = s.y;
+//             data.f[9] = s.z;
+//             #else
+//             data.f[7] = mm[0] * s.x - mbias[0]; // uT
+//             data.f[8] = mm[1] * s.y - mbias[1];
+//             data.f[9] = mm[2] * s.z - mbias[2];
+//             #endif            
+//         }
 
-        if (pressFound) {
-          BMP390::pt_t s = bmp.read();
-          if (s.ok) {
-            data.f[14] = s.press;
-            data.f[15] = s.temp;
-          }
-          else {
-            data.f[14] = 0.0f;
-            data.f[15] = 0.0f;
-          }
-        }
-    }
+//         if (pressFound) {
+//           BMP390::pt_t s = bmp.read();
+//           if (s.ok) {
+//             data.f[14] = s.press;
+//             data.f[15] = s.temp;
+//           }
+//           else {
+//             data.f[14] = 0.0f;
+//             data.f[15] = 0.0f;
+//           }
+//         }
+//     }
 
-  protected:
-    bool soxFound;
-    bool magFound;
-    bool pressFound;
+//   protected:
+//     bool soxFound;
+//     bool magFound;
+//     bool pressFound;
 
-    QCF qcf;
+//     QCF qcf;
 
-    LSM6DSOX::gciLSM6DSOX sox;   // accel and gyro
-    LIS3MDL::gciLIS3MDL lis3mdl; // magnetometer
-    BMP390::gciBMP390 bmp;       // pressure
-    Quaternion q;
-    float dt;       // time difference between samples
-    uint32_t ts;    // timestamp (msec)
-    float sm[3][4]; // accel scale/bias
-    float gbias[3]; // gyro bias
-    float mbias[3]; // mag bias
-    float mm[3];    // mag scale
-};
-#endif
+//     LSM6DSOX::gciLSM6DSOX sox;   // accel and gyro
+//     LIS3MDL::gciLIS3MDL lis3mdl; // magnetometer
+//     BMP390::gciBMP390 bmp;       // pressure
+//     Quaternion q;
+//     float dt;       // time difference between samples
+//     uint32_t ts;    // timestamp (msec)
+//     float sm[3][4]; // accel scale/bias
+//     float gbias[3]; // gyro bias
+//     float mbias[3]; // mag bias
+//     float mm[3];    // mag scale
+// };
+// #endif
 
 
 

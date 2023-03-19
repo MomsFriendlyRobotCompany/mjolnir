@@ -2,11 +2,12 @@
 
 #include <gciSensors.hpp>
 
+constexpr int LED_PIN = 13;
 
 // Toggle board's LED on/off
 class BlinkLED: public Alarm {
   public:
-  BlinkLED(const uint32_t delaytime): led_blink(true), Alarm(delaytime) {}
+  BlinkLED(const uint32_t delaytime, int pin=LED_PIN): led_blink(true), Alarm(delaytime), led_pin(pin) {}
 
   void update() {
     if (check()) {
@@ -18,14 +19,12 @@ class BlinkLED: public Alarm {
   protected:
 
   void led(bool val) {
-      constexpr int LED_PIN = 13;
-      constexpr int wait_time = 500;
-
-      if (val) digitalWrite(LED_PIN, HIGH);
-      else digitalWrite(LED_PIN, LOW);
+      if (val) digitalWrite(led_pin, HIGH);
+      else digitalWrite(led_pin, LOW);
   }
 
   bool led_blink;
+  const int led_pin;
 };
 
 

@@ -7,16 +7,19 @@
 #include <cstdint>
 #include <yivo.hpp>
 #include <gciSensors.hpp>
-#include <TFmini.h>
+// #include <TFmini.h>
 
 gciLSOX imu; // accel, gyro, mag, press, temp
 // QuadESC motors(1000);
-BlinkLED blinker(500);
+// BlinkLED blinker(500);
 Yivo<128> yivo; // uC to computer packetizer
-Alarm hertz(5);
+Alarm hertz(100);
 
 // Earth::WGS84_t wgs;
 
+/*
+Toggles between true and false
+*/
 class Toggle {
   public:
   Toggle(bool v=false): val(v) {}
@@ -34,6 +37,10 @@ class Toggle {
   bool val;
 };
 
+void status(const String& s, const bool condition) {
+  String stat = condition ? "GOOD" : "FAILED";
+  Serial.println(s + stat);
+}
 
 void setup() {
 
@@ -49,26 +56,43 @@ void setup() {
     // setup sensors
     imu.init();
 
-    Serial.println("Boot complete:");
-    Serial.println(" " + imu.found ? "+ IMU ready" : "! IMU not found");
-
-    Serial.println(" Motors ready");
-    
+    // Board names defined:
+    // ~/Library/Arduino15/packages/*/hardware/*/*/boards.txt
+    #if defined(ADAFRUIT_QTPY_M0)
+    Serial.print("ADAFRUIT_QTPY_M0");
+    #elif defined(ADAFRUIT_TRINKET_M0)
+    Serial.print("ADAFRUIT_TRINKET_M0");
+    #elif defined(ADAFRUIT_ITSYBITSY_M0_EXPRESS)
+    Serial.print("ADAFRUIT_ITSYBITSY_M0_EXPRESS");
+    #elif defined(ADAFRUIT_ITSYBITSY_M4_EXPRESS)
+    Serial.print("ADAFRUIT_ITSYBITSY_M4_EXPRESS");
+    #else
+    Serial.print("Unknown Processor");
+    #endif
+    Serial.println(" boot complete:");
+    status(" + LSM6DSOX accel|gyro: ", imu.soxFound);
+    status(" + LIS3MDL mag:         ", imu.lisFound);
+    status(" + BMP390 press|temp:   ", imu.bmpFound);    
 }
 
 Toggle telemetry;
 
-void sendTelemetry (bool now=false) {
-  if (hertz.check() || now) {
-    if (imu.found) {
-        imu.read();
-        if (telemetry || now) yivo.pack_n_send(imu.id, imu.data.b, imu.bsize);
-    }
-  }
-}
+// void sendTelemetry (bool now=false) {
+//   if (hertz.check() || now) {
+//     if (imu.found) {
+//         imu.read();
+//         if (telemetry || now) yivo.pack_n_send(imu.id, imu.data.b, imu.bsize);
+//     }
+//   }
+// }
 
 void loop() {
-  sendTelemetry();
+  // sendTelemetry();
+  if (imu.found) {
+    imu.read();
+    if (telemetry) 
+      if (hertz.check()) yivo.pack_n_send(imu.id, imu.data.b, imu.bsize);
+  }
 
   // serial ascii input
   if (Serial.available() > 0) {
@@ -76,10 +100,10 @@ void loop() {
 
     if (inByte == '\n' or inByte == '\r'); // get rid of \r and \n from Master
     else if (inByte == 'g') yivo.pack_n_send(PING, nullptr, 0);
-    else if (inByte == 't') telemetry.toggle(); //telemetry = !telemetry;
-    else if (inByte == 'T') sendTelemetry(true);
+    else if (inByte == 't') telemetry.toggle();
+    else if (inByte == 'T') yivo.pack_n_send(imu.id, imu.data.b, imu.bsize);
     else yivo.pack_n_send(YIVO_ERROR); // send error, unknown command
   }
 
-  blinker.update();
+  // blinker.update();
 }
