@@ -1,3 +1,0 @@
-FICBOX Dual-axis XY Joystick Module For Arduino Joystick Module Dummy (https://www.thingiverse.com/thing:2772651) by ihillway is licensed under the Creative Commons - Attribution license.
-http://creativecommons.org/licenses/by/3.0/
-
