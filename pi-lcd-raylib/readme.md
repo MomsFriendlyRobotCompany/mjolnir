@@ -3,15 +3,29 @@
 ## Setup
 
 ```bash
+sudo apt install libcap-dev rpicam-apps
 sudo apt install libgl1 libegl1 lm-sensors i2c-tools
-sudo apt install python3-venv python3-pip
+
+# I don't like this, it installs x11
+sudo apt install python3-venv python3-pip python3-picamera2
 ```
 
 ```bash
 mkdir ~/venvs
 python3 -m venv venvs/py
 . ~/venvs/py/bin/activate
+```
 
+Change to `~/venvs/py` and it should have a file `pyvenv.cfg`. Edit this file:
+
+```
+# from
+include-system-site-packages = false
+# to
+include-system-site-packages = true
+```
+
+```bash
 pip install -U raylib_drm opencv-python
 ```
 
@@ -68,5 +82,7 @@ Available cameras
 - [Camera Datasheet](https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf)
 
 ## Software
+
+- Use `YUV420` for grayscale and it lowers the CPU usage and bandwidth needed
 
 - [Camera Software](https://www.raspberrypi.com/documentation/computers/camera_software.html)
